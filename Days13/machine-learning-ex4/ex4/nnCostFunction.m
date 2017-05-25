@@ -67,10 +67,10 @@ Theta2_grad = zeros(size(Theta2));
 
 %----------------------------------Part 1--------------------------------------------
 
-Layer1_output = [ones(m,1),X];
-Layer2_output_exclude_bias =  sigmoid(Layer1_output*transpose(Theta1));
-Layer2_output_include_bias =  [ones(m,1),Layer2_output_exclude_bias];
-Layer3_output= sigmoid(Layer2_output_include_bias*transpose(Theta2));
+Layer1_output = transpose([ones(m,1),X]);
+Layer2_output_exclude_bias =  sigmoid(Theta1*Layer1_output);
+Layer2_output_include_bias =  [ones(1,m);Layer2_output_exclude_bias];
+Layer3_output= sigmoid(Theta2*Layer2_output_include_bias);
 
 J = 0;
 
@@ -78,7 +78,7 @@ for i=1:m,
 	% 遍历每一个sample
 	sample_y_vetor = zeros(num_labels,1);
     sample_y_vetor(y(i)) = 1;
-  	J = J + (   -log(Layer3_output(i,:))*sample_y_vetor - log(1-Layer3_output(i,:))*(1-sample_y_vetor)   );
+  	J = J + (   -log(transpose(Layer3_output(:,i)))*sample_y_vetor - log(transpose(1-Layer3_output(:,i)))*(1-sample_y_vetor)   );
 end 
 %J = -y.*log(Layer3_output)-(1-y).*log(1-Layer3_output);
 %keyboard();
@@ -106,14 +106,14 @@ outputLayer_delta = zeros(num_labels,m);
 hiddenLayer_delta = zeros(hidden_layer_size+1,m);
 for i=1:m,
 
-  	sample_y_vetor = zeros(num_labels,1);
+    sample_y_vetor = zeros(num_labels,1);
     sample_y_vetor(y(i)) = 1;
-    outputLayer_delta(:,i) = transpose(Layer3_output(i,:))-sample_y_vetor;
+    outputLayer_delta(:,i) = Layer3_output(:,i)-sample_y_vetor;
 
-    hiddenLayer_delta(:,i) = transpose(Theta2)*outputLayer_delta(:,i).*sigmoidGradient([1;Theta1*transpose(Layer1_output(i,:))]);
+    hiddenLayer_delta(:,i) = transpose(Theta2)*outputLayer_delta(:,i).*sigmoidGradient([1;Theta1*Layer1_output(:,i)]);
 
-    Theta2_grad = Theta2_grad + outputLayer_delta(:,i)*(Layer2_output_include_bias(i,:));
-    Theta1_grad = Theta1_grad + (hiddenLayer_delta(2:end,i))*(Layer1_output(i,:));
+    Theta2_grad = Theta2_grad + outputLayer_delta(:,i)*transpose(Layer2_output_include_bias(:,i));
+    Theta1_grad = Theta1_grad + (hiddenLayer_delta(2:end,i))*transpose(Layer1_output(:,i));
 
 end
 
